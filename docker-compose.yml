@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DATABASE=parking_api
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+      - gem_cache:/usr/local/bundle
+    command: bash -c "bundle install && bundle exec rackup --host 0.0.0.0 -p 3000"
+
+  mongo:
+    image: mongo:5
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+  gem_cache:
