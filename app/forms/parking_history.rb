@@ -20,8 +20,8 @@ class ParkingHistory < Base
       {
         id: parking.id.to_s,
         time: calculate_time_spent(parking),
-        paid: parking.paid,
-        left: parking.left
+        paid: parking.paid?,
+        left: parking.exited?
       }
     end
   end

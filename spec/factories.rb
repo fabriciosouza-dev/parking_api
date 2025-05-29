@@ -9,18 +9,16 @@ FactoryBot.define do
     plate { "#{('A'..'Z').to_a.sample(3).join}-#{Faker::Number.number(digits: 4)}" }
     entry_time { Time.now - rand(1..120) * 60 }
     exit_time { nil }
-    paid { false }
-    left { false }
+    state { 'entered' }
 
-    initialize_with { new(plate, { '_id' => id, 'entry_time' => entry_time, 'paid' => paid, 'left' => left, 'exit_time' => exit_time }) }
+    initialize_with { new(plate, { '_id' => id, 'entry_time' => entry_time, 'exit_time' => exit_time, 'state' => state }) }
 
     trait :paid do
-      paid { true }
+      state { 'paid' }
     end
 
     trait :left do
-      paid { true }
-      left { true }
+      state { 'exited' }
       exit_time { Time.now }
     end
   end

@@ -12,7 +12,7 @@ class ParkingPayment < Base
   def process
     return false unless valid?
     
-    @parking.instance_variable_set(:@paid, true)
+    @parking.pay!
     @parking.save
     true
   end
@@ -25,7 +25,7 @@ class ParkingPayment < Base
       return
     end
 
-    if @parking.paid
+    if @parking.paid? || @parking.exited?
       add_error(:payment, "Parking already paid")
     end
   end

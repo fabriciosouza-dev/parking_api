@@ -9,8 +9,7 @@ RSpec.describe Parking do
     context 'with default values' do
       it 'creates a new parking correctly' do
         expect(parking.plate).to eq('ABC-1234')
-        expect(parking.paid).to be false
-        expect(parking.left).to be false
+        expect(parking.aasm.current_state).to eq(:entered)
         expect(parking.entry_time).to be_a(Time)
         expect(parking.exit_time).to be_nil
       end
@@ -21,6 +20,58 @@ RSpec.describe Parking do
       
       it 'normalizes plate to uppercase' do
         expect(parking.plate).to eq('ABC-1234')
+      end
+    end
+  end
+
+  describe '#within_grace_period?' do
+    context 'when within 15 minutes' do
+      let(:parking) { build(:parking, entry_time: Time.now - 10 * 60) }
+      
+      it 'returns true' do
+        expect(parking.within_grace_period?).to be true
+      end
+    end
+    
+    context 'when outside 15 minutes' do
+      let(:parking) { build(:parking, entry_time: Time.now - 20 * 60) }
+      
+      it 'returns false' do
+        expect(parking.within_grace_period?).to be false
+      end
+    end
+  end
+  
+  describe 'state transitions' do
+    context 'when exiting without payment' do
+      context 'within grace period' do
+        let(:parking) { build(:parking, entry_time: Time.now - 10 * 60) }
+        
+        it 'allows exit' do
+          expect(parking.exit!).to be true
+          expect(parking.exited?).to be true
+          expect(parking.aasm.current_state).to eq(:exited)
+        end
+      end
+      
+      context 'outside grace period' do
+        let(:parking) { build(:parking, entry_time: Time.now - 20 * 60) }
+        
+        it 'does not allow exit' do
+          expect { parking.exit! }.to raise_error(AASM::InvalidTransition)
+          expect(parking.exited?).to be false
+          expect(parking.aasm.current_state).to eq(:entered)
+        end
+      end
+    end
+    
+    context 'when paid' do
+      let(:parking) { build(:parking, :paid) }
+      
+      it 'allows exit regardless of time' do
+        expect(parking.exit!).to be true
+        expect(parking.exited?).to be true
+        expect(parking.aasm.current_state).to eq(:exited)
       end
     end
   end

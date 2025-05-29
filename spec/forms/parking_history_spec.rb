@@ -27,21 +27,21 @@ RSpec.describe ParkingHistory do
     
     context 'when form is valid' do
       let(:plate) { 'ABC-1234' }
-      let(:parking1) { build(:parking, plate: plate, paid: true, left: true) }
-      let(:parking2) { build(:parking, plate: plate, paid: false, left: false) }
+      let(:parking1) { build(:parking, :left, plate: plate) }
+      let(:parking2) { build(:parking, plate: plate) }
       let(:expected_history) do
         [
           {
             id: parking1.id.to_s,
             time: '30 minutes',
-            paid: true,
-            left: true
+            paid: parking1.paid?,
+            left: parking1.exited?
           },
           {
             id: parking2.id.to_s,
             time: '10 minutes',
-            paid: false,
-            left: false
+            paid: parking2.paid?,
+            left: parking2.exited?
           }
         ]
       end

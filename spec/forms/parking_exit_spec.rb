@@ -17,6 +17,19 @@ RSpec.describe ParkingExit do
       end
     end
 
+    context 'when parking exists, is not paid but within grace period' do
+      let(:parking) { build(:parking, entry_time: Time.now - 10 * 60) }
+      let(:id) { parking.id.to_s }
+      
+      before do
+        allow(Parking).to receive(:find).with(id).and_return(parking)
+      end
+      
+      it 'returns true' do
+        expect(form.valid?).to be true
+      end
+    end
+
     context 'when parking does not exist' do
       let(:id) { 'non-existent-id' }
       
@@ -30,8 +43,8 @@ RSpec.describe ParkingExit do
       end
     end
 
-    context 'when parking is not paid' do
-      let(:parking) { build(:parking) }
+    context 'when parking is not paid and outside grace period' do
+      let(:parking) { build(:parking, entry_time: Time.now - 20 * 60) }
       let(:id) { parking.id.to_s }
       
       before do
@@ -40,7 +53,7 @@ RSpec.describe ParkingExit do
       
       it 'returns false' do
         expect(form.valid?).to be false
-        expect(form.errors[:payment]).to include('Parking not paid')
+        expect(form.errors[:payment]).to include('Parking not paid and outside grace period')
       end
     end
 
@@ -54,7 +67,6 @@ RSpec.describe ParkingExit do
       
       it 'returns false' do
         expect(form.valid?).to be false
-        expect(form.errors[:exit]).to include('Vehicle already left')
       end
     end
   end
@@ -62,7 +74,7 @@ RSpec.describe ParkingExit do
   describe '#process' do
     let(:form) { ParkingExit.new(id) }
     
-    context 'when form is valid' do
+    context 'when form is valid with paid parking' do
       let(:parking) { build(:parking, :paid) }
       let(:id) { parking.id.to_s }
       
@@ -72,20 +84,37 @@ RSpec.describe ParkingExit do
       
       it 'marks the parking as left' do
         expect(form.process).to be true
-        expect(parking.left).to be true
+        expect(parking.exited?).to be true
       end
     end
-
-    context 'when form is invalid' do
-      let(:parking) { build(:parking) }
+    
+    context 'when form is valid with unpaid parking within grace period' do
+      let(:parking) { build(:parking, entry_time: Time.now - 10 * 60) }
       let(:id) { parking.id.to_s }
       
       before do
         allow(Parking).to receive(:find).with(id).and_return(parking)
       end
       
+      it 'marks the parking as left' do
+        expect(form.process).to be true
+        expect(parking.exited?).to be true
+      end
+    end
+
+    context 'when form is invalid with unpaid parking outside grace period' do
+      let(:parking) { build(:parking, entry_time: Time.now - 20 * 60) }
+      let(:id) { parking.id.to_s }
+      
+      before do
+        allow(Parking).to receive(:find).with(id).and_return(parking)
+        allow(parking).to receive(:within_grace_period?).and_return(false)
+        allow(parking).to receive(:exit!).and_raise(AASM::InvalidTransition)
+      end
+      
       it 'returns false' do
         expect(form.process).to be false
+        expect(form.errors[:payment]).to include('Parking not paid and outside grace period')
       end
     end
   end

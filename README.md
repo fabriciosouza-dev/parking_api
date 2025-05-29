@@ -11,9 +11,10 @@ API de controle de estacionamento desenvolvida em Ruby com MongoDB.
 
 ## Tecnologias Utilizadas
 
-- Ruby (Rack)
+- Ruby (Sinatra)
 - MongoDB
 - Docker e Docker Compose
+- AASM (State Machine)
 - RSpec para testes
 - Factory Bot e Faker para testes
 
@@ -22,12 +23,14 @@ API de controle de estacionamento desenvolvida em Ruby com MongoDB.
 ```
 parking-api/
 ├── app/
+│   ├── concerns/
+│   │   └── plate_validatable.rb
 │   ├── forms/
-│   │   ├── base_form.rb
-│   │   ├── parking_entry_form.rb
-│   │   ├── parking_payment_form.rb
-│   │   ├── parking_exit_form.rb
-│   │   └── parking_history_form.rb
+│   │   ├── base.rb
+│   │   ├── parking_entry.rb
+│   │   ├── parking_payment.rb
+│   │   ├── parking_exit.rb
+│   │   └── parking_history.rb
 │   ├── models/
 │   │   └── parking.rb
 │   └── validators/
@@ -37,11 +40,11 @@ parking-api/
 ├── spec/
 │   ├── factories.rb
 │   ├── forms/
-│   │   ├── base_form_spec.rb
-│   │   ├── parking_entry_form_spec.rb
-│   │   ├── parking_payment_form_spec.rb
-│   │   ├── parking_exit_form_spec.rb
-│   │   └── parking_history_form_spec.rb
+│   │   ├── base_spec.rb
+│   │   ├── parking_entry_spec.rb
+│   │   ├── parking_payment_spec.rb
+│   │   ├── parking_exit_spec.rb
+│   │   └── parking_history_spec.rb
 │   ├── models/
 │   │   └── parking_spec.rb
 │   ├── validators/
@@ -105,20 +108,30 @@ GET /parking/:plate
 
 ## Padrões de Projeto Utilizados
 
+### State Machine
+
+Utilizamos o padrão State Machine através da gem AASM para gerenciar o ciclo de vida do estacionamento:
+
+- **Estados**: `entered` (inicial), `paid`, `exited`
+- **Transições**: 
+  - `pay`: de `entered` para `paid`
+  - `exit`: de `paid` para `exited` ou de `entered` para `exited` (com período de tolerância)
+- **Período de tolerância**: Permite saída sem pagamento se estiver dentro de 15 minutos da entrada
+
 ### Form Object
 
 O padrão Form Object foi implementado para separar a lógica de validação e processamento de dados da lógica de negócios. Cada operação da API tem seu próprio Form Object:
 
-- **ParkingEntryForm**: Valida e processa a entrada de um veículo
-- **ParkingPaymentForm**: Valida e processa o pagamento
-- **ParkingExitForm**: Valida e processa a saída de um veículo
-- **ParkingHistoryForm**: Valida e busca o histórico por placa
+- **ParkingEntry**: Valida e processa a entrada de um veículo
+- **ParkingPayment**: Valida e processa o pagamento
+- **ParkingExit**: Valida e processa a saída de um veículo
+- **ParkingHistory**: Valida e busca o histórico por placa
 
-### Validator
+### Concern
 
-O padrão Validator foi implementado para encapsular a lógica de validação específica:
+O padrão Concern foi utilizado para compartilhar funcionalidades entre diferentes classes:
 
-- **PlateValidator**: Valida o formato da placa (AAA-9999)
+- **PlateValidatable**: Compartilha a validação de formato de placa
 
 ### Factory Pattern (para testes)
 

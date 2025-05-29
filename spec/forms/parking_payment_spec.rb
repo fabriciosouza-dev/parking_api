@@ -58,7 +58,7 @@ RSpec.describe ParkingPayment do
       
       it 'marks the parking as paid' do
         expect(form.process).to be true
-        expect(parking.paid).to be true
+        expect(parking.paid?).to be true
       end
     end
 

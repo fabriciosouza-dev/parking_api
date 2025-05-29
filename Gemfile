@@ -6,6 +6,7 @@ gem 'mongo', '~> 2.18'
 gem 'bson_ext', '~> 1.5'
 gem 'json', '~> 2.6'
 gem 'puma', '~> 5.6'
+gem 'aasm', '~> 5.2'
 
 group :development, :test do
   gem 'rspec', '~> 3.11'
