@@ -31,7 +31,6 @@ class ParkingExit < Base
       return
     end
 
-    # Verificamos se o estacionamento está no estado paid OU dentro do período de tolerância
     unless @parking.paid? || @parking.within_grace_period?
       add_error(:payment, "Parking not paid and outside grace period")
       return
