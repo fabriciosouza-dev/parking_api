@@ -1,4 +1,5 @@
 require_relative 'base'
+require_relative '../models/parking'
 
 class ParkingPayment < Base
   attr_reader :id, :parking
@@ -25,7 +26,7 @@ class ParkingPayment < Base
       return
     end
 
-    if @parking.paid? || @parking.exited?
+    if @parking.paid?
       add_error(:payment, "Parking already paid")
     end
   end

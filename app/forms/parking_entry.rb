@@ -1,5 +1,6 @@
 require_relative 'base'
 require_relative '../concerns/plate_validatable'
+require_relative '../models/parking'
 
 class ParkingEntry < Base
   include PlateValidatable
