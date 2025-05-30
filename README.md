@@ -59,9 +59,6 @@ parking-api/
 ├── Gemfile.lock
 ├── INSTALL.md
 ├── README.md
-├── setup.sh
-├── run_tests.sh
-└── test_api.sh
 ```
 
 ## Endpoints da API
